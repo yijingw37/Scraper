@@ -1,21 +1,22 @@
 const curl = require("curl");
 const jsdom = require("jsdom");
 const fs = require('fs');
-const { JSDOM } = jsdom;
-const dom = new JSDOM(html);
-const $ = (require('jquery'))(dom.window);
 const url = "https://www.mccormick.northwestern.edu/computer-science/academics/courses/";
-
 curl.get(url, null, (err, resp, body) => {
     if (resp.statusCode == 200) {
         parseData(body);
     }
     else {
+        //some error handling
         console.log("error while fetching url");
     }
 });
 
 function parseData(html) {
+    const { JSDOM } = jsdom;
+    const dom = new JSDOM(html);
+    const $ = (require('jquery'))(dom.window);
+    //let's start extracting the data
     const items = $("#course_list");
     let list = [];
     for (var i = 1; i < items[0].rows.length; i++) {
@@ -26,11 +27,11 @@ function parseData(html) {
         });
     }
 
-    fs.writeFile('courses.json', JSON.stringify(list), function (err) {
+    fs.writeFile('../webhook/courses.json', JSON.stringify(list), function (err) {
         if (err) {
             console.log(err)
-        } else { 
-            console.log('complete') 
+        } else {
+            console.log('complete')
         }
     });
 }
