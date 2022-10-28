@@ -1,0 +1,32 @@
+{
+  "name": "Scraper",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "dependencies": {
+    "cheerio": "^1.0.0-rc.12",
+    "node-fetch": "^3.2.10",
+    "puppeteer": "^19.2.0",
+    "request": "^2.88.2",
+    "request-promise": "^4.2.6"
+  },
+  "devDependencies": {
+    "curl": "^0.1.4",
+    "jquery": "^3.6.1",
+    "jsdom": "^20.0.1"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yijingw37/Scraper.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/yijingw37/Scraper/issues"
+  },
+  "homepage": "https://github.com/yijingw37/Scraper#readme"
+}
