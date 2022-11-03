@@ -7,15 +7,7 @@ let list = [];
 // scrape course list
 curl.get(url, null, async (err, resp, body) => {
     if (resp.statusCode == 200) {
-        await parseData(body);
-        // write to courses.json
-        fs.writeFile('../webhook/courses2.json', JSON.stringify(list), function (err) {
-            if (err) {
-                console.log(err)
-            } else {
-                console.log('complete')
-            }
-        });
+        parseData(body);
     }
     else {
         //some error handling
@@ -23,7 +15,7 @@ curl.get(url, null, async (err, resp, body) => {
     }
 });
 
-async function parseData(html) {
+function parseData(html) {
     const { JSDOM } = jsdom;
     const dom = new JSDOM(html);
     const $ = (require('jquery'))(dom.window);
@@ -36,10 +28,10 @@ async function parseData(html) {
             link: courseUrl,
             prerequisites: ""
         };
+        list.push(course);
 
         // Scrape each page for prerequisites
-        await curl.get(url + courseUrl, null, async (err, resp, body) => {
-            console.log("parse each page");
+        curl.get(url + courseUrl, null, async (err, resp, body) => {
             if (resp.statusCode == 200) {
                 const { JSDOM } = jsdom;
                 const dom = new JSDOM(body);
@@ -56,4 +48,13 @@ async function parseData(html) {
             }
         });
     }
+
+    // write to courses.json
+    fs.writeFile('../webhook/courses2.json', JSON.stringify(list), function (err) {
+        if (err) {
+            console.log(err)
+        } else {
+            console.log('complete')
+        }
+    });
 }
