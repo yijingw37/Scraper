@@ -3,8 +3,10 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
+  "type": "module",
   "dependencies": {
     "cheerio": "^1.0.0-rc.12",
+    "deasync": "^0.1.28",
     "node-fetch": "^3.2.10",
     "puppeteer": "^19.2.0",
     "request": "^2.88.2",
