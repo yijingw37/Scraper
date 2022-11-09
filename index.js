@@ -2,10 +2,12 @@ import fetch from 'node-fetch';
 import "./addRequire.js";
 const jsdom = require("jsdom");
 const fs = require('fs');
+const courseListUrl = 'https://www.mccormick.northwestern.edu/computer-science/academics/courses/';
+const courseListPath = './html/courses.html';
 let list = [];
 let course;
 
-// download page
+// download html page from url
 async function download(url) {
     try {
         const response = await fetch(url);
@@ -19,84 +21,65 @@ async function download(url) {
     }
 }
 
-// write to cache
-async function writeToCache(filePath, url, callback, i) {
-    fs.writeFile(filePath, await download(url), function (err) {
-        if (err) {
-            console.log(err)
-        } else {
-            callback(filePath, i);
-        }
-    });
+// write html pages to cache
+async function writeToCache(filePath, url, callback) {
+    fs.writeFileSync(filePath, await download(url));
+    callback(filePath);
 }
 
-function generateCourseJson() {
+async function generateCourseJson() {
     // If course list doesn't exist in cache, download it
-    if (!fs.existsSync('./html/courses.html')) {
-        writeToCache('./html/courses.html', 'https://www.mccormick.northwestern.edu/computer-science/academics/courses/', readCourseList);
+    if (!fs.existsSync(courseListPath)) {
+        await writeToCache(courseListPath, courseListUrl, readCourseList);
     } else {
-        readCourseList('./html/courses.html');
+        readCourseList(courseListPath);
     }
 }
 
-function readCourseList(path) {
-    fs.readFile(path, { encoding: 'utf-8' }, function (err, data) {
-        if (!err) {
-            const { JSDOM } = jsdom;
-            const dom = new JSDOM(data);
-            const $ = (require('jquery'))(dom.window);
-            const items = $("#course_list");
-            // items[0].rows.length
-            for (var i = 1; i < 10; i++) {
-                const courseUrl = items[0].rows[i].cells[1].children[0].getAttribute('href');
-                course = {
-                    courseNumber: items[0].rows[i].cells[0].children[0].innerHTML,
-                    courseTitle: items[0].rows[i].cells[1].children[0].innerHTML,
-                    link: courseUrl,
-                    prerequisites: ''
-                };
+// Read the course list from cache
+async function readCourseList(path) {
+    const data = fs.readFileSync(path, 'utf-8');
+    const { JSDOM } = jsdom;
+    const dom = new JSDOM(data);
+    const $ = (require('jquery'))(dom.window);
+    const items = $("#course_list");
 
-                generatePrerequisites(items[0].rows[i].cells[0].children[0].innerHTML, courseUrl);
-            }
-        } else {
-            console.log(err);
-        }
-    });
+    for (var i = 1; i < items[0].rows.length; i++) {
+        const courseUrl = items[0].rows[i].cells[1].children[0].getAttribute('href');
+        course = {
+            courseNumber: items[0].rows[i].cells[0].children[0].innerHTML,
+            courseTitle: items[0].rows[i].cells[1].children[0].innerHTML,
+            link: courseUrl,
+            prerequisites: ''
+        };
+
+        await generatePrerequisites(items[0].rows[i].cells[0].children[0].innerHTML, courseUrl);
+    }
+
+    fs.writeFileSync('../webhook/courses2.json', JSON.stringify(list));
+    console.log("writing complete");
 }
 
-function generatePrerequisites(name, courseUrl) {
-    const path = './html/' + name + '.html';
+async function generatePrerequisites(name, courseUrl) {
+    const path = './html/' + name.replace('/', ',') + '.html';
     if (!fs.existsSync(path)) {
-        writeToCache(path, 'https://www.mccormick.northwestern.edu/computer-science/academics/courses/' + courseUrl, readCourse);
+        await writeToCache(path, courseListUrl + courseUrl, readCourse);
     } else {
         readCourse(path);
     }
 }
 
+// Read each individual course from cache
 function readCourse(path) {
-    fs.readFile(path, { encoding: 'utf-8' }, function (err, data) {
-        if (!err) {
-            const { JSDOM } = jsdom;
-            const dom = new JSDOM(data);
-            const $ = (require('jquery'))(dom.window);
-            const prerequisites = $('h3:contains("Prerequisites")')[0];
-            if (prerequisites) {
-                console.log("setting prereq", prerequisites.nextSibling.textContent)
-                course.prerequisites = prerequisites.nextSibling.textContent;
-            }
-            list.push(course);
-            fs.writeFile('../webhook/courses2.json', JSON.stringify(list), function (err) {
-                if (err) {
-                    console.log(err)
-                } else {
-                    console.log('complete writing to courses2.json')
-                }
-            });
-        } else {
-            console.log(err);
-        }
-    });
-
+    const data = fs.readFileSync(path, 'utf-8');
+    const { JSDOM } = jsdom;
+    const dom = new JSDOM(data);
+    const $ = (require('jquery'))(dom.window);
+    const prerequisites = $('h3:contains("Prerequisites")')[0];
+    if (prerequisites) {
+        course.prerequisites = prerequisites.nextSibling.textContent;
+    }
+    list.push(course);
 }
 
 generateCourseJson();
