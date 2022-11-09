@@ -45,6 +45,11 @@ async function readCourseList(path) {
     const items = $("#course_list");
 
     for (var i = 1; i < items[0].rows.length; i++) {
+        // Pause for 2s so the server doesn't think we are doing DoS attack
+        if(i%10 == 0){
+            await new Promise(r => setTimeout(r, 2000));
+        }
+
         const courseUrl = items[0].rows[i].cells[1].children[0].getAttribute('href');
         course = {
             courseNumber: items[0].rows[i].cells[0].children[0].innerHTML,
