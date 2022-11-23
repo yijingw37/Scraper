@@ -43,11 +43,15 @@ async function readCourseList(path) {
     const dom = new JSDOM(data);
     const $ = (require('jquery'))(dom.window);
     const items = $("#course_list");
+    const quarterNames = [];
+    for (var i = 2; i < 6; i++) {
+        quarterNames.push(items[0].rows[0].cells[i].textContent);
+    }
 
     for (var i = 1; i < items[0].rows.length; i++) {
         // Pause for 2s so the server doesn't think we are doing DoS attack
-        if(i%10 == 0){
-            await new Promise(r => setTimeout(r, 2000));
+        if (i % 10 == 0) {
+            //await new Promise(r => setTimeout(r, 2000));
         }
 
         const courseUrl = items[0].rows[i].cells[1].children[0].getAttribute('href');
@@ -55,13 +59,26 @@ async function readCourseList(path) {
             courseNumber: items[0].rows[i].cells[0].children[0].innerHTML,
             courseTitle: items[0].rows[i].cells[1].children[0].innerHTML,
             link: courseUrl,
-            prerequisites: ''
+            prerequisites: '',
+            offering: {}
         };
+
+        for (var j = 2; j < 6; j++) {
+            const quarter = items[0].rows[i].cells[j];
+            if (quarter.textContent) {
+                const offeringInfo = quarter.innerHTML.split("<br>");
+                course.offering[quarterNames[j-2]] = {
+                    time: offeringInfo[0],
+                    professor: offeringInfo[1]
+                }
+            }
+        }
 
         await generatePrerequisites(items[0].rows[i].cells[0].children[0].innerHTML, courseUrl);
     }
 
     fs.writeFileSync('../webhook/courses2.json', JSON.stringify(list));
+    console.log(list);
     console.log("writing complete");
 }
 
