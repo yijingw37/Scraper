@@ -51,7 +51,7 @@ async function readCourseList(path) {
     for (var i = 1; i < items[0].rows.length; i++) {
         // Pause for 2s so the server doesn't think we are doing DoS attack
         if (i % 10 == 0) {
-            //await new Promise(r => setTimeout(r, 2000));
+            await new Promise(r => setTimeout(r, 2000));
         }
 
         const courseUrl = items[0].rows[i].cells[1].children[0].getAttribute('href');
@@ -66,10 +66,10 @@ async function readCourseList(path) {
         for (var j = 2; j < 6; j++) {
             const quarter = items[0].rows[i].cells[j];
             if (quarter.textContent) {
-                const offeringInfo = quarter.innerHTML.split("<br>");
+                const offeringInfo = quarter.innerHTML.split('<br>');
                 course.offering[quarterNames[j-2]] = {
                     time: offeringInfo[0],
-                    professor: offeringInfo[1]
+                    professor: offeringInfo[1].replace(' &amp;', ',')
                 }
             }
         }
