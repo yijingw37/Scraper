@@ -69,7 +69,7 @@ async function readCourseList(path) {
                 const offeringInfo = quarter.innerHTML.split('<br>');
                 course.offering[quarterNames[j-2]] = {
                     time: offeringInfo[0],
-                    professor: offeringInfo[1].replace(' &amp;', ',')
+                    professor: offeringInfo[1].split(' &amp;')
                 }
             }
         }
