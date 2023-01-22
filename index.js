@@ -77,7 +77,7 @@ async function readCourseList(path) {
         await generatePrerequisites(items[0].rows[i].cells[0].children[0].innerHTML, courseUrl);
     }
 
-    fs.writeFileSync('../webhook/courses2.json', JSON.stringify(list));
+    fs.writeFileSync('../webhook/courses.json', JSON.stringify(list));
     console.log(list);
     console.log("writing complete");
 }
